@@ -3,6 +3,7 @@ import uuid
 import os
 import base64
 import requests
+import uvicorn
 import websocket # uv add websocket-client
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
@@ -70,11 +71,7 @@ if __name__ == "__main__":
     if MCP_TRANSPORT == "sse":
         # 1. Azure VM용: SSE 모드 활성화 + 외부 접속 허용(0.0.0.0)
         print(f"🚀 Running in SSE mode on {VM_IP}:8000")
-        mcp.run(
-            transport="sse",
-            host="0.0.0.0",
-            port=8000
-        )
+        uvicorn.run(mcp.sse_app, host="0.0.0.0", port=8000)
     else:
         # 2. 로컬 테스트용: 기본 stdio 모드 (Inspector 접속용)
         print("🛠️ Running in Local stdio mode (Use MCP Inspector)")
