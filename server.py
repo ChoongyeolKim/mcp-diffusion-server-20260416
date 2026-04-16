@@ -58,7 +58,7 @@ def generate_image(prompt: str) -> str:
 
         # 3. API 요청 (원격 VM 주소로)
         # res = requests.post(f"http://{COMFY_ADDR}/prompt", json={"prompt": workflow, "client_id": client_id})
-        res = requests.post(f"http://{COMFY_BASE_URL}/prompt", json={"prompt": workflow, "client_id": client_id})
+        res = requests.post(f"{COMFY_BASE_URL}/prompt", json={"prompt": workflow, "client_id": client_id})
         res.raise_for_status()
         prompt_id = res.json()['prompt_id']
 
@@ -74,7 +74,7 @@ def generate_image(prompt: str) -> str:
 
         # 5. 생성된 이미지 다운로드
         # history = requests.get(f"http://{COMFY_ADDR}/history/{prompt_id}").json()
-        history = requests.get(f"http://{COMFY_BASE_URL}/history/{prompt_id}").json()
+        history = requests.get(f"{COMFY_BASE_URL}/history/{prompt_id}").json()
         outputs = history[prompt_id]['outputs']
         
         for node_id in outputs:
