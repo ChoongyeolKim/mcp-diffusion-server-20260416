@@ -15,7 +15,16 @@ load_dotenv()
 VM_IP = os.getenv("AZURE_IP_ADDRESS", "127.0.0.1") # <- 여기에 실제 Azure IP Address 입력
 MCP_TRANSPORT = os.getenv("MCP_TRANSPORT")
 
-COMFY_ADDR = f"{VM_IP}:8188"
+# COMFY_ADDR = f"{VM_IP}:8188"
+
+# AZURE_DOMAIN 있으면 HTTPS로, 없으면 로컬 IP로
+AZURE_DOMAIN = os.getenv("AZURE_DOMAIN", "")
+if AZURE_DOMAIN:
+    COMFY_BASE_URL = f"https://{AZURE_DOMAIN}"
+    COMFY_ADDR = f"{AZURE_DOMAIN}"  # WebSocket용은 별도 처리
+else:
+    COMFY_BASE_URL = f"http://{VM_IP}:8188"
+    COMFY_ADDR = f"{VM_IP}:8188"
 
 if MCP_TRANSPORT == "sse":
     mcp = FastMCP("Comfy-Remote-Test",
@@ -36,7 +45,9 @@ def generate_image(prompt: str) -> str:
     try:
         # 1. WebSocket 연결 (원격 VM 주소로)
         ws = websocket.WebSocket()
-        ws.connect(f"ws://{COMFY_ADDR}/ws?clientId={client_id}")
+        # ws.connect(f"ws://{COMFY_ADDR}/ws?clientId={client_id}")
+        ws_scheme = "wss" if AZURE_DOMAIN else "ws"
+        ws.connect(f"{ws_scheme}://{COMFY_ADDR}/ws?clientId={client_id}")
 
         # 2. Workflow 파일 로드 (로컬 PC에 이 파일이 있어야 함)
         with open("Workflow1-API.json", "r", encoding="utf-8") as f:
@@ -46,7 +57,8 @@ def generate_image(prompt: str) -> str:
         workflow["6"]["inputs"]["text"] = prompt
 
         # 3. API 요청 (원격 VM 주소로)
-        res = requests.post(f"http://{COMFY_ADDR}/prompt", json={"prompt": workflow, "client_id": client_id})
+        # res = requests.post(f"http://{COMFY_ADDR}/prompt", json={"prompt": workflow, "client_id": client_id})
+        res = requests.post(f"http://{COMFY_BASE_URL}/prompt", json={"prompt": workflow, "client_id": client_id})
         res.raise_for_status()
         prompt_id = res.json()['prompt_id']
 
@@ -61,15 +73,22 @@ def generate_image(prompt: str) -> str:
             else: continue
 
         # 5. 생성된 이미지 다운로드
-        history = requests.get(f"http://{COMFY_ADDR}/history/{prompt_id}").json()
+        # history = requests.get(f"http://{COMFY_ADDR}/history/{prompt_id}").json()
+        history = requests.get(f"http://{COMFY_BASE_URL}/history/{prompt_id}").json()
         outputs = history[prompt_id]['outputs']
         
         for node_id in outputs:
             if 'images' in outputs[node_id]:
                 filename = outputs[node_id]['images'][0]['filename']
-                img_res = requests.get(f"http://{COMFY_ADDR}/view", params={"filename": filename})
-                b64_str = base64.b64encode(img_res.content).decode('utf-8')
-                return f"data:image/png;base64,{b64_str}"
+
+                # 이미지 자체를 리턴할 때
+                # img_res = requests.get(f"http://{COMFY_ADDR}/view", params={"filename": filename})
+                # b64_str = base64.b64encode(img_res.content).decode('utf-8')
+                # return f"data:image/png;base64,{b64_str}"
+
+                # 이미지 URL을 리턴할 때
+                image_url = f"{COMFY_BASE_URL}/view?filename={filename}&type=output"
+                return f"이미지가 생성되었습니다: {image_url}"
 
         return "이미지 데이터를 찾을 수 없습니다."
 
