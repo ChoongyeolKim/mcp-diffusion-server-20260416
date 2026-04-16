@@ -80,7 +80,7 @@ if __name__ == "__main__":
     if MCP_TRANSPORT == "sse":
         # 1. Azure VM용: SSE 모드 활성화 + 외부 접속 허용(0.0.0.0)
         print(f"🚀 Running in SSE mode on {VM_IP}:8000")
-        mcp.run(transport='sse')
+        mcp.run(transport='streamable-http')
     else:
         # 2. 로컬 테스트용: 기본 stdio 모드 (Inspector 접속용)
         print("🛠️ Running in Local stdio mode (Use MCP Inspector)")
