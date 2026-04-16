@@ -1,0 +1,11 @@
+[project]
+name = "mcp-diffusion-server-20260416"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "mcp>=1.27.0",
+    "requests>=2.33.1",
+    "websocket-client>=1.9.0",
+]
