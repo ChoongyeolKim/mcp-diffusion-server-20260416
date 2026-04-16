@@ -12,6 +12,8 @@ load_dotenv()
 # [수정 포인트] 로컬 테스트 시에는 Azure VM의 공인 IP를 입력하세요.
 # .env 파일에 AZURE_IP_ADDRESS=20.xxx.xxx.xxx 로 저장하거나 직접 수정하세요.
 VM_IP = os.getenv("AZURE_IP_ADDRESS", "127.0.0.1") # <- 여기에 실제 Azure IP Address 입력
+MCP_TRANSPORT = os.getenv("MCP_TRANSPORT")
+
 COMFY_ADDR = f"{VM_IP}:8188"
 
 mcp = FastMCP("Comfy-Remote-Test")
@@ -65,5 +67,15 @@ def generate_image(prompt: str) -> str:
         return f"원격 연결 실패 ({COMFY_ADDR}): {str(e)}"
 
 if __name__ == "__main__":
-    # 로컬 테스트시는 stdio 모드가 기본 (Inspector 사용 가능)
-    mcp.run()
+    if MCP_TRANSPORT == "sse":
+        # 1. Azure VM용: SSE 모드 활성화 + 외부 접속 허용(0.0.0.0)
+        print(f"🚀 Running in SSE mode on {VM_IP}:8000")
+        mcp.run(
+            transport="sse",
+            host="0.0.0.0",
+            port=8000
+        )
+    else:
+        # 2. 로컬 테스트용: 기본 stdio 모드 (Inspector 접속용)
+        print("🛠️ Running in Local stdio mode (Use MCP Inspector)")
+        mcp.run()
