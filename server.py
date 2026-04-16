@@ -54,7 +54,7 @@ def generate_image(prompt: str) -> str:
             workflow = json.load(f)
         
         # FLUX 워크플로우에 맞게 프롬프트 주입 (노드 ID "6" 기준)
-        workflow["6"]["inputs"]["text"] = prompt
+        workflow["3"]["inputs"]["text"] = prompt
 
         # 3. API 요청 (원격 VM 주소로)
         # res = requests.post(f"http://{COMFY_ADDR}/prompt", json={"prompt": workflow, "client_id": client_id})
